@@ -105,15 +105,20 @@ export class JiraService {
   /**
    * Get all comments for an issue
    */
-  async getIssueComments(issueKey: string): Promise<any> {
+  async getIssueComments(issueKey: string, credentials?: { email: string; token: string; url?: string }): Promise<any> {
     try {
       console.log(`Getting comments for issue ${issueKey}`);
-      
+
+      const auth = credentials?.email && credentials?.token
+        ? Buffer.from(`${credentials.email}:${credentials.token}`).toString('base64')
+        : this.auth;
+      const baseUrl = credentials?.url || this.baseUrl;
+
       const response = await axios.get(
-        `${this.baseUrl}/rest/api/3/issue/${issueKey}/comment`,
+        `${baseUrl}/rest/api/3/issue/${issueKey}/comment`,
         {
           headers: {
-            'Authorization': `Basic ${this.auth}`,
+            'Authorization': `Basic ${auth}`,
             'Accept': 'application/json'
           }
         }
@@ -153,10 +158,10 @@ export class JiraService {
         // Use JIRA_WIDGET credentials for widget messages
         authToken = Buffer.from(`${process.env.JIRA_WIDGET}:${process.env.JIRA_WIDGET_TOKEN}`).toString('base64');
         console.log(`Using JIRA_WIDGET credentials for widget message`);
-      } else if (authorInfo?.source === 'ai-response' && authorInfo?.jiraToken && authorInfo?.userEmail) {
-        // Use user's credentials for AI responses when available
+      } else if (authorInfo?.jiraToken && authorInfo?.userEmail) {
+        // Use explicit credentials when provided (e.g. service-specific widget Jira account)
         authToken = Buffer.from(`${authorInfo.userEmail}:${authorInfo.jiraToken}`).toString('base64');
-        console.log(`Using user credentials for AI response: ${authorInfo.userEmail}`);
+        console.log(`Using provided credentials for comment: ${authorInfo.userEmail}`);
       } else {
         // Fallback to JIRA_EMAIL credentials for AI responses
         authToken = Buffer.from(`${process.env.JIRA_EMAIL}:${process.env.JIRA_API_TOKEN}`).toString('base64');
@@ -368,16 +373,19 @@ export class JiraService {
   /**
    * Create a new chat session for an existing issue
    */
-  async createChatSession(issueKey: string, customerInfo: { name: string; email: string }): Promise<any> {
+  async createChatSession(issueKey: string, customerInfo: { name: string; email: string }, credentials?: { email: string; token: string; url?: string }): Promise<any> {
     try {
       console.log(`Creating chat session for issue ${issueKey}`);
-      
+
       // Add a special comment to mark the start of chat session
       const sessionComment = `🎯 **CHAT SESSION STARTED**\n\nCustomer: ${customerInfo.name} (${customerInfo.email})\nStarted: ${new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' })}\n\n---\nChat widget connected successfully.`;
-      
+
       return await this.addCommentToIssue(issueKey, sessionComment, {
         name: 'System',
-        source: 'jira'
+        source: 'jira',
+        userEmail: credentials?.email,
+        jiraToken: credentials?.token,
+        jiraUrl: credentials?.url
       });
     } catch (error) {
       console.error(`Error creating chat session for ${issueKey}:`, error);
@@ -388,11 +396,11 @@ export class JiraService {
   /**
    * Get conversation history for an issue (formatted for widget)
    */
-  async getConversationHistory(issueKey: string): Promise<Array<{ role: 'user' | 'assistant'; content: string; timestamp: string; source: 'widget' | 'jira' }>> {
+  async getConversationHistory(issueKey: string, credentials?: { email: string; token: string; url?: string }): Promise<Array<{ role: 'user' | 'assistant'; content: string; timestamp: string; source: 'widget' | 'jira' }>> {
     try {
       console.log(`Getting conversation history for issue ${issueKey}`);
-      
-      const commentsResponse = await this.getIssueComments(issueKey);
+
+      const commentsResponse = await this.getIssueComments(issueKey, credentials);
       const comments = commentsResponse?.comments || [];
       
       // Filter and format comments for chat widget

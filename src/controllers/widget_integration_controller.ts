@@ -80,11 +80,12 @@ export class WidgetIntegrationController {
         return;
       }
 
-      // Create chat session using system service (this might need to be updated too)
-      await this.jiraService.createChatSession(issueKey, customerInfo);
+      // Create chat session using the resolved credentials (widget-specific account if found)
+      const jiraCredentials = { email: jiraEmail, token: jiraToken, url: jiraUrl };
+      await this.jiraService.createChatSession(issueKey, customerInfo, jiraCredentials);
 
-      // Get conversation history using system service
-      const history = await this.jiraService.getConversationHistory(issueKey);
+      // Get conversation history using the same credentials
+      const history = await this.jiraService.getConversationHistory(issueKey, jiraCredentials);
 
       res.json({
         success: true,
