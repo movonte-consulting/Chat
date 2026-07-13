@@ -34,33 +34,30 @@ export class WidgetIntegrationController {
 
       console.log(`🔗 Connecting widget to ticket ${issueKey} for customer ${customerInfo.email}`);
 
-      // Try to get widget-specific Jira account first
-      let jiraEmail = req.user?.email;
-      let jiraToken = req.user?.jiraToken;
-      let jiraUrl = req.user?.jiraUrl;
+      // Each service must have its own dedicated widget Jira account —
+      // never fall back to the global system account for widget traffic.
+      const serviceId = req.body.serviceId;
 
-      // Extract serviceId from the issue key to look up service-specific credentials
-      // Note: This assumes the request includes serviceId or we can derive it from the ticket
-      const serviceId = req.body.serviceId; // Should be passed by the widget
-      
-      if (serviceId && req.user?.id) {
-        const widgetAccount = await ServiceJiraAccountsController.getWidgetJiraAccount(req.user.id, serviceId);
-        if (widgetAccount) {
-          console.log(`✅ Using widget-specific Jira account for service ${serviceId}`);
-          jiraEmail = widgetAccount.email;
-          jiraToken = widgetAccount.token;
-          jiraUrl = widgetAccount.url;
-        }
-      }
-
-      // Verify we have Jira credentials
-      if (!jiraToken || !jiraUrl || !jiraEmail) {
-        res.status(401).json({
+      if (!serviceId) {
+        res.status(400).json({
           success: false,
-          error: 'Jira credentials not found. Please configure widget Jira account.'
+          error: 'Missing required field: serviceId'
         });
         return;
       }
+
+      const widgetAccount = await ServiceJiraAccountsController.getWidgetJiraAccount(req.user!.id, serviceId);
+
+      if (!widgetAccount) {
+        res.status(424).json({
+          success: false,
+          error: `El servicio "${serviceId}" no tiene una cuenta de Jira configurada para el widget. Configúrala en el dashboard antes de conectar tickets.`
+        });
+        return;
+      }
+
+      console.log(`✅ Using widget-specific Jira account for service ${serviceId}`);
+      const { email: jiraEmail, token: jiraToken, url: jiraUrl } = widgetAccount;
 
       const userJiraService = new UserJiraService(
         req.user!.id,
@@ -125,25 +122,35 @@ export class WidgetIntegrationController {
 
       console.log(`📤 Sending message to Jira ticket ${issueKey}: ${message}`);
 
-      // Try to get widget-specific Jira account first
-      let jiraService = this.jiraService;
-      const serviceId = req.body.serviceId; // Should be passed by the widget
-      
-      if (serviceId && req.user?.id) {
-        const widgetAccount = await ServiceJiraAccountsController.getWidgetJiraAccount(req.user.id, serviceId);
-        if (widgetAccount) {
-          console.log(`✅ Using widget-specific Jira account for service ${serviceId}`);
-          // Create a temporary UserJiraService with the widget account
-          const widgetJiraService = new UserJiraService(
-            req.user.id,
-            widgetAccount.token,
-            widgetAccount.url,
-            widgetAccount.email
-          );
-          // Use the widget account to add the comment
-          jiraService = widgetJiraService as any;
-        }
+      // Each service must have its own dedicated widget Jira account —
+      // never fall back to the global system account for widget traffic.
+      const serviceId = req.body.serviceId;
+
+      if (!serviceId) {
+        res.status(400).json({
+          success: false,
+          error: 'Missing required field: serviceId'
+        });
+        return;
       }
+
+      const widgetAccount = await ServiceJiraAccountsController.getWidgetJiraAccount(req.user!.id, serviceId);
+
+      if (!widgetAccount) {
+        res.status(424).json({
+          success: false,
+          error: `El servicio "${serviceId}" no tiene una cuenta de Jira configurada para el widget. Configúrala en el dashboard antes de enviar mensajes.`
+        });
+        return;
+      }
+
+      console.log(`✅ Using widget-specific Jira account for service ${serviceId}`);
+      const jiraService: any = new UserJiraService(
+        req.user!.id,
+        widgetAccount.token,
+        widgetAccount.url,
+        widgetAccount.email
+      );
 
       // Check if assistant is disabled for this ticket
       if (this.configService.isTicketDisabled(issueKey)) {
