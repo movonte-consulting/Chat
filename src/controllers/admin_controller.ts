@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { OpenAIService } from '../services/openAI_service';
 import { ConfigurationService } from '../services/configuration_service';
 import { JiraService } from '../services/jira_service';
+import { UserJiraService } from '../services/user_jira_service';
 import { DatabaseService } from '../services/database_service';
 import { User } from '../models';
 
@@ -14,16 +15,32 @@ export class AdminController {
     this.configService = ConfigurationService.getInstance();
   }
 
+  // Construir un servicio de Jira con las credenciales del usuario logueado
+  // (nunca la cuenta global compartida) para operaciones de proyectos.
+  private buildUserJiraService(req: Request): UserJiraService | null {
+    if (!req.user?.jiraToken || !req.user?.jiraUrl) {
+      return null;
+    }
+    return new UserJiraService(req.user.id, req.user.jiraToken, req.user.jiraUrl, req.user.email);
+  }
+
   // Dashboard principal del CEO
   async getDashboard(req: Request, res: Response): Promise<void> {
     try {
       // Obtener todos los asistentes disponibles
       const assistants = await this.openaiService.listAssistants();
-      
-      // Obtener todos los proyectos de Jira disponibles
-      const jiraService = JiraService.getInstance();
-      const projects = await jiraService.listProjects();
-      
+
+      // Obtener los proyectos de Jira usando las credenciales del usuario logueado
+      const userJiraService = this.buildUserJiraService(req);
+      if (!userJiraService) {
+        res.status(400).json({
+          success: false,
+          error: 'No tienes credenciales de Jira configuradas. Configúralas en tu perfil.'
+        });
+        return;
+      }
+      const projects = await userJiraService.listProjects();
+
       // Obtener configuraciones actuales de servicios desde unified_configurations
       const { sequelize } = await import('../config/database');
       const [configurations] = await sequelize.query(`
@@ -47,8 +64,8 @@ export class AdminController {
           : config.configuration
       }));
       
-      // Obtener proyecto activo actual
-      const activeProject = jiraService.getActiveProject();
+      // Obtener proyecto activo actual (configuración global compartida)
+      const activeProject = JiraService.getInstance().getActiveProject();
       
       // El asistente global es el del Landing Page Service
       const landingPageService = serviceConfigs.find(config => config.serviceId === 'landing-page');
@@ -372,10 +389,17 @@ export class AdminController {
   async listProjects(req: Request, res: Response): Promise<void> {
     try {
       console.log('📋 Solicitando lista de proyectos de Jira...');
-      
-      const jiraService = JiraService.getInstance();
-      const projects = await jiraService.listProjects();
-      
+
+      const userJiraService = this.buildUserJiraService(req);
+      if (!userJiraService) {
+        res.status(400).json({
+          success: false,
+          error: 'No tienes credenciales de Jira configuradas. Configúralas en tu perfil.'
+        });
+        return;
+      }
+      const projects = await userJiraService.listProjects();
+
       res.json({
         success: true,
         projects,
@@ -405,12 +429,19 @@ export class AdminController {
       }
 
       console.log(`🔄 Cambiando proyecto activo a: ${projectKey}`);
-      
-      // Verificar que el proyecto existe
-      const jiraService = JiraService.getInstance();
-      const projects = await jiraService.listProjects();
+
+      // Verificar que el proyecto existe, usando las credenciales del usuario logueado
+      const userJiraService = this.buildUserJiraService(req);
+      if (!userJiraService) {
+        res.status(400).json({
+          success: false,
+          error: 'No tienes credenciales de Jira configuradas. Configúralas en tu perfil.'
+        });
+        return;
+      }
+      const projects = await userJiraService.listProjects();
       const projectExists = projects.some(p => p.key === projectKey);
-      
+
       if (!projectExists) {
         res.status(400).json({
           success: false,
@@ -418,8 +449,8 @@ export class AdminController {
         });
         return;
       }
-      
-      jiraService.setActiveProject(projectKey);
+
+      JiraService.getInstance().setActiveProject(projectKey);
       
       res.json({
         success: true,
@@ -470,9 +501,16 @@ export class AdminController {
       }
 
       console.log(`🔍 Obteniendo detalles del proyecto: ${projectKey}`);
-      
-      const jiraService = JiraService.getInstance();
-      const projectDetails = await jiraService.getProjectByKey(projectKey);
+
+      const userJiraService = this.buildUserJiraService(req);
+      if (!userJiraService) {
+        res.status(400).json({
+          success: false,
+          error: 'No tienes credenciales de Jira configuradas. Configúralas en tu perfil.'
+        });
+        return;
+      }
+      const projectDetails = await userJiraService.getProjectByKey(projectKey);
       
       res.json({
         success: true,
@@ -492,9 +530,16 @@ export class AdminController {
   async testJiraConnection(req: Request, res: Response): Promise<void> {
     try {
       console.log('🔗 Probando conexión con Jira...');
-      
-      const jiraService = JiraService.getInstance();
-      const connectionTest = await jiraService.testConnection();
+
+      const userJiraService = this.buildUserJiraService(req);
+      if (!userJiraService) {
+        res.status(400).json({
+          success: false,
+          error: 'No tienes credenciales de Jira configuradas. Configúralas en tu perfil.'
+        });
+        return;
+      }
+      const connectionTest = await userJiraService.testConnection();
       
       res.json({
         success: true,
@@ -529,10 +574,17 @@ export class AdminController {
 
       console.log(`🚫 Desactivando asistente para ticket: ${issueKey}`);
 
-      // Verificar que el ticket existe
-      const jiraService = JiraService.getInstance();
-      const issue = await jiraService.getIssueByKey(issueKey);
-      
+      // Verificar que el ticket existe, usando las credenciales del usuario logueado
+      const userJiraService = this.buildUserJiraService(req);
+      if (!userJiraService) {
+        res.status(400).json({
+          success: false,
+          error: 'No tienes credenciales de Jira configuradas. Configúralas en tu perfil.'
+        });
+        return;
+      }
+      const issue = await userJiraService.getIssueByKey(issueKey);
+
       if (!issue) {
         res.status(404).json({
           success: false,
@@ -543,15 +595,12 @@ export class AdminController {
 
       // Agregar comentario explicativo en Jira
       const commentText = `🤖 **AI Assistant Disabled**\n\n` +
-        `The AI assistant has been disabled for this ticket by the CEO.\n` +
+        `The AI assistant has been disabled for this ticket by ${req.user!.username}.\n` +
         `Reason: ${reason || 'No reason provided'}\n` +
         `Disabled at: ${new Date().toISOString()}\n\n` +
         `To re-enable the assistant, use the CEO Dashboard.`;
 
-      await jiraService.addCommentToIssue(issueKey, commentText, {
-        name: 'CEO Dashboard',
-        source: 'jira'
-      });
+      await userJiraService.addCommentToIssue(issueKey, commentText);
 
       // Agregar el ticket a la lista de tickets desactivados
       this.configService.disableAssistantForTicket(issueKey, reason);
@@ -591,10 +640,17 @@ export class AdminController {
 
       console.log(`✅ Reactivando asistente para ticket: ${issueKey}`);
 
-      // Verificar que el ticket existe
-      const jiraService = JiraService.getInstance();
-      const issue = await jiraService.getIssueByKey(issueKey);
-      
+      // Verificar que el ticket existe, usando las credenciales del usuario logueado
+      const userJiraService = this.buildUserJiraService(req);
+      if (!userJiraService) {
+        res.status(400).json({
+          success: false,
+          error: 'No tienes credenciales de Jira configuradas. Configúralas en tu perfil.'
+        });
+        return;
+      }
+      const issue = await userJiraService.getIssueByKey(issueKey);
+
       if (!issue) {
         res.status(404).json({
           success: false,
@@ -605,14 +661,11 @@ export class AdminController {
 
       // Agregar comentario explicativo en Jira
       const commentText = `🤖 **AI Assistant Re-enabled**\n\n` +
-        `The AI assistant has been re-enabled for this ticket by the CEO.\n` +
+        `The AI assistant has been re-enabled for this ticket by ${req.user!.username}.\n` +
         `Re-enabled at: ${new Date().toISOString()}\n\n` +
         `The assistant will now respond to new comments.`;
 
-      await jiraService.addCommentToIssue(issueKey, commentText, {
-        name: 'CEO Dashboard',
-        source: 'jira'
-      });
+      await userJiraService.addCommentToIssue(issueKey, commentText);
 
       // Remover el ticket de la lista de tickets desactivados
       this.configService.enableAssistantForTicket(issueKey);
@@ -844,8 +897,15 @@ export class AdminController {
   async getAvailableStatuses(req: Request, res: Response): Promise<void> {
     try {
       console.log('🔍 getAvailableStatuses called');
-      const jiraService = JiraService.getInstance();
-      const statuses = await jiraService.getAllPossibleStatuses();
+      const userJiraService = this.buildUserJiraService(req);
+      if (!userJiraService) {
+        res.status(400).json({
+          success: false,
+          error: 'No tienes credenciales de Jira configuradas. Configúralas en tu perfil.'
+        });
+        return;
+      }
+      const statuses = await userJiraService.getAllPossibleStatuses();
       console.log('📋 Available statuses:', statuses);
       
       res.json({

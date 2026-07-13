@@ -143,6 +143,7 @@ export class UserServiceController {
         res.json({
           success: true,
           message: `Servicio '${serviceName}' creado exitosamente`,
+          isAdmin: user.role === 'admin',
           data: createdService
         });
       } else {

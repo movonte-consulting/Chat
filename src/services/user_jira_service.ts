@@ -36,6 +36,45 @@ export class UserJiraService {
     }
   }
 
+  // Obtener todos los estados posibles de Jira (metadata)
+  async getAllPossibleStatuses(): Promise<any[]> {
+    try {
+      const response = await axios.get(`${this.baseUrl}/rest/api/3/status`, {
+        headers: {
+          'Authorization': `Basic ${this.auth}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      return response.data.map((status: any) => ({
+        id: status.id,
+        name: status.name,
+        description: status.description || status.name,
+        statusCategory: status.statusCategory
+      }));
+    } catch (error) {
+      console.error(`Error getting all possible statuses for user ${this.userId}:`, error);
+      throw error;
+    }
+  }
+
+  // Obtener proyecto por key
+  async getProjectByKey(projectKey: string): Promise<any> {
+    try {
+      const response = await axios.get(`${this.baseUrl}/rest/api/3/project/${projectKey}`, {
+        headers: {
+          'Authorization': `Basic ${this.auth}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error(`Error getting project ${projectKey} for user ${this.userId}:`, error);
+      throw error;
+    }
+  }
+
   // Obtener issue por key
   async getIssueByKey(issueKey: string): Promise<any> {
     try {
