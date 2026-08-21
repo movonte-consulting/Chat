@@ -3,7 +3,7 @@ import request from 'supertest';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import { redirectToLoginIfNotAuth, requireAdmin } from '../middleware/auth';
-import { login } from '../controllers/auth_controller';
+import { login } from '../features/auth';
 
 // Cargar variables de entorno
 dotenv.config();

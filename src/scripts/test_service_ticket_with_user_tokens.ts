@@ -1,11 +1,11 @@
-import { ServiceTicketController } from '../controllers/service_ticket_controller';
+import { ticketController } from '../features/tickets/infrastructure/dependency-injection';
 import { User } from '../models';
 
 async function testServiceTicketWithUserTokens() {
   console.log('🧪 === TESTING SERVICE TICKET WITH USER TOKENS ===\n');
 
   try {
-    const controller = new ServiceTicketController();
+    const controller = ticketController;
 
     // 1. Buscar un usuario con tokens de Jira configurados
     console.log('1️⃣ Buscando usuario con tokens de Jira...');
@@ -106,7 +106,7 @@ async function testServiceTicketWithUserTokens() {
       })
     } as any;
 
-    await controller.createTicketForService(mockReq, mockRes);
+    await controller.createTicketForServiceHandler(mockReq, mockRes);
 
     console.log('\n🎉 === TEST COMPLETED ===');
 

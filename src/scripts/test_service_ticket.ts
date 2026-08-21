@@ -1,12 +1,10 @@
-import { ServiceTicketController } from '../controllers/service_ticket_controller';
-import { DatabaseService } from '../services/database_service';
+import { ticketController } from '../features/tickets/infrastructure/dependency-injection';
 
 async function testServiceTicketEndpoint() {
   console.log('🧪 === TESTING SERVICE TICKET ENDPOINT ===\n');
 
   try {
-    const controller = new ServiceTicketController();
-    const dbService = DatabaseService.getInstance();
+    const controller = ticketController;
 
     // 1. Verificar que el servicio existe
     console.log('1️⃣ Verificando configuración del servicio...');
@@ -62,7 +60,7 @@ async function testServiceTicketEndpoint() {
       })
     } as any;
 
-    await controller.getServiceInfo(mockReq, mockRes);
+    await controller.getServiceInfoHandler(mockReq, mockRes);
 
     // 3. Probar creación de ticket
     console.log('\n3️⃣ Probando createTicketForService...');
@@ -93,7 +91,7 @@ async function testServiceTicketEndpoint() {
       })
     } as any;
 
-    await controller.createTicketForService(mockReqCreate, mockResCreate);
+    await controller.createTicketForServiceHandler(mockReqCreate, mockResCreate);
 
     console.log('\n🎉 === TEST COMPLETED ===');
 

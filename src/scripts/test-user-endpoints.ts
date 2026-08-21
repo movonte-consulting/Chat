@@ -48,18 +48,17 @@ async function testUserEndpoints() {
       })
     };
     
-    // Importar y probar el controlador
-    const { UserServiceController } = await import('../controllers/user_service_controller');
-    const controller = new UserServiceController();
-    
+    // Importar y probar los handlers del feature user-services
+    const { getUserDashboard, getUserAssistants, getUserProjects } = await import('../features/user-services');
+
     console.log('\n📊 Probando getUserDashboard...');
-    await controller.getUserDashboard(mockReq as any, mockRes as any);
-    
+    await getUserDashboard(mockReq as any, mockRes as any);
+
     console.log('\n🤖 Probando getUserAssistants...');
-    await controller.getUserAssistants(mockReq as any, mockRes as any);
-    
+    await getUserAssistants(mockReq as any, mockRes as any);
+
     console.log('\n📋 Probando getUserProjects...');
-    await controller.getUserProjects(mockReq as any, mockRes as any);
+    await getUserProjects(mockReq as any, mockRes as any);
     
   } catch (error) {
     console.error('❌ Error:', error);

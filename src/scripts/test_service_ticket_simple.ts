@@ -1,10 +1,10 @@
-import { ServiceTicketController } from '../controllers/service_ticket_controller';
+import { ticketController } from '../features/tickets/infrastructure/dependency-injection';
 
 async function testServiceTicketSimple() {
   console.log('🧪 === TESTING SERVICE TICKET ENDPOINT (SIMPLE) ===\n');
 
   try {
-    const controller = new ServiceTicketController();
+    const controller = ticketController;
 
     // Mock request para crear ticket
     const mockReq = {
@@ -33,7 +33,7 @@ async function testServiceTicketSimple() {
     console.log('🎫 Probando createTicketForService...');
     console.log('📋 Datos de prueba:', mockReq.body);
 
-    await controller.createTicketForService(mockReq, mockRes);
+    await controller.createTicketForServiceHandler(mockReq, mockRes);
 
     console.log('\n🎉 === TEST COMPLETED ===');
 
