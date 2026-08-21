@@ -6,14 +6,14 @@
  */
 
 import { ChatKitJiraService } from '../services/chatkit_jira_service';
-import { ConfigurationService } from '../services/configuration_service';
+import { ServiceConfigRegistry } from '../services/service_config_registry';
 
 async function testChatKitIntegration() {
   console.log('🧪 === PRUEBA DE INTEGRACIÓN CHATKIT ===\n');
 
   try {
     // Verificar configuración
-    const configService = ConfigurationService.getInstance();
+    const configService = ServiceConfigRegistry.getInstance();
     const workflowId = process.env.OPENAI_CHATKIT_WORKFLOW_ID;
     
     if (!workflowId) {

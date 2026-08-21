@@ -1,14 +1,15 @@
-import { ConfigurationService } from '../../../../services/configuration_service';
+import { StatusBasedDisableConfigService } from '../../../../services/status_based_disable_config';
+import { TicketDisableRegistry } from '../../../../services/ticket_disable_registry';
 import { JiraService } from '../../../../services/jira_service';
 import { StatusChangePort } from '../../domain/interfaces/status-change.port';
 
 export class StatusChangeAdapter implements StatusChangePort {
   async checkAndHandle(issueKey: string, newStatus: string): Promise<boolean> {
-    return ConfigurationService.getInstance().checkAndHandleStatusChange(issueKey, newStatus);
+    return StatusBasedDisableConfigService.getInstance().checkAndHandleStatusChange(issueKey, newStatus);
   }
 
   isDisabled(issueKey: string): boolean {
-    return ConfigurationService.getInstance().isTicketDisabled(issueKey);
+    return TicketDisableRegistry.getInstance().isTicketDisabled(issueKey);
   }
 
   async postStatusChangeComment(issueKey: string, commentText: string): Promise<void> {

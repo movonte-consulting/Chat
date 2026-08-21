@@ -1,5 +1,5 @@
 import { JiraService } from './jira_service';
-import { ConfigurationService } from './configuration_service';
+import { TicketDisableRegistry } from './ticket_disable_registry';
 
 interface ChatKitSession {
   id: string;
@@ -21,12 +21,12 @@ interface ChatKitResponse {
 
 export class ChatKitJiraService {
   private jiraService: JiraService;
-  private configService: ConfigurationService;
+  private configService: TicketDisableRegistry;
   private activeSessions: Map<string, ChatKitSession> = new Map();
 
   constructor() {
     this.jiraService = JiraService.getInstance();
-    this.configService = ConfigurationService.getInstance();
+    this.configService = TicketDisableRegistry.getInstance();
   }
 
   /**

@@ -1,10 +1,10 @@
-import { ConfigurationService } from '../services/configuration_service';
+import { ServiceConfigRegistry } from '../services/service_config_registry';
 
 async function forceReloadConfigurations() {
   try {
     console.log('🔄 === FORZANDO RECARGA DE CONFIGURACIONES ===\n');
 
-    const configService = ConfigurationService.getInstance();
+    const configService = ServiceConfigRegistry.getInstance();
     
     // Acceder al método privado usando any
     const configServiceAny = configService as any;

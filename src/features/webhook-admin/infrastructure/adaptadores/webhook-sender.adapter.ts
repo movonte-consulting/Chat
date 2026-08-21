@@ -3,7 +3,7 @@ import { WebhookPayload, WebhookSendResult } from '../../domain/modelos/webhook-
 
 export class WebhookSenderAdapter implements WebhookSenderPort {
   async sendToWebhook(payload: WebhookPayload): Promise<WebhookSendResult> {
-    const { WebhookService } = await import('../../../../services/webhook_service');
+    const { WebhookService } = await import('../servicios/webhook.service');
     const webhookService = WebhookService.getInstance();
     return webhookService.sendToWebhook(payload);
   }

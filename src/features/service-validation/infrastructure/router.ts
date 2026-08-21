@@ -6,7 +6,6 @@ import { AdminServiceValidationController } from './controladores/admin/admin-se
 /** Montado en /api/user/service-validation. */
 export function buildUserServiceValidationRouter(controller: UserServiceValidationController): Router {
   const router = Router();
-  router.post('/request', authenticateToken, controller.createValidationRequest.bind(controller));
   router.get('/requests', authenticateToken, controller.getUserValidations.bind(controller));
   router.post('/protected-token', authenticateToken, controller.generateProtectedToken.bind(controller));
   return router;

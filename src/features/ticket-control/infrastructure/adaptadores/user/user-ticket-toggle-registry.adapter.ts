@@ -1,25 +1,25 @@
-import { UserConfigurationService } from '../../../../../services/user_configuration_service';
+import * as userTicketDisableService from '../../../../../services/user_ticket_disable_service';
 import { UserDisabledTicket } from '../../../domain/modelos/user-disabled-ticket.model';
 import { UserTicketToggleRegistryPort } from '../../../domain/interfaces/user/user-ticket-toggle-registry.port';
 
 export class UserTicketToggleRegistryAdapter implements UserTicketToggleRegistryPort {
   async disable(userId: number, issueKey: string, reason: string): Promise<void> {
-    await UserConfigurationService.getInstance(userId).disableAssistantForTicket(issueKey, reason);
+    await userTicketDisableService.disableAssistantForTicket(userId, issueKey, reason);
   }
 
   async enable(userId: number, issueKey: string): Promise<void> {
-    await UserConfigurationService.getInstance(userId).enableAssistantForTicket(issueKey);
+    await userTicketDisableService.enableAssistantForTicket(userId, issueKey);
   }
 
   async isDisabled(userId: number, issueKey: string): Promise<boolean> {
-    return UserConfigurationService.getInstance(userId).isTicketDisabled(issueKey);
+    return userTicketDisableService.isTicketDisabled(userId, issueKey);
   }
 
   async getInfo(userId: number, issueKey: string): Promise<UserDisabledTicket | null> {
-    return UserConfigurationService.getInstance(userId).getTicketInfo(issueKey) as Promise<UserDisabledTicket | null>;
+    return userTicketDisableService.getTicketInfo(userId, issueKey) as Promise<UserDisabledTicket | null>;
   }
 
   async listAll(userId: number): Promise<UserDisabledTicket[]> {
-    return UserConfigurationService.getInstance(userId).getDisabledTickets() as Promise<UserDisabledTicket[]>;
+    return userTicketDisableService.getDisabledTickets(userId) as Promise<UserDisabledTicket[]>;
   }
 }

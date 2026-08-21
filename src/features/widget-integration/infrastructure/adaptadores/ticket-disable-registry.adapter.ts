@@ -1,12 +1,12 @@
-import { ConfigurationService } from '../../../../services/configuration_service';
+import { TicketDisableRegistry } from '../../../../services/ticket_disable_registry';
 import { TicketDisableRegistryPort } from '../../domain/interfaces/ticket-disable-registry.port';
 import { DisabledTicketInfo } from '../../domain/modelos/disabled-ticket-info.model';
 
 export class TicketDisableRegistryAdapter implements TicketDisableRegistryPort {
-  private readonly configService: ConfigurationService;
+  private readonly configService: TicketDisableRegistry;
 
   constructor() {
-    this.configService = ConfigurationService.getInstance();
+    this.configService = TicketDisableRegistry.getInstance();
   }
 
   isTicketDisabled(issueKey: string): boolean {

@@ -144,12 +144,9 @@ export const authenticateProtectedToken = async (req: Request, res: Response, ne
       return;
     }
 
-    // Importar el servicio de validación
-    const { ServiceValidationService } = await import('../services/service_validation_service');
-    const validationService = ServiceValidationService.getInstance();
-    
     // Validar el token protegido
-    const validation = validationService.validateProtectedToken(token);
+    const { validateProtectedToken } = await import('../services/protected_token_service');
+    const validation = validateProtectedToken(token);
     
     if (!validation.isValid) {
       res.status(401).json({ 

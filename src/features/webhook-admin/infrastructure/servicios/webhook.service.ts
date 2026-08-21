@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ConfigurationService } from './configuration_service';
+import { WebhookConfigRegistry } from './webhook-config-registry.service';
 
 export interface WebhookPayload {
   issueKey: string;
@@ -16,10 +16,10 @@ export interface WebhookPayload {
 
 export class WebhookService {
   private static instance: WebhookService;
-  private configService: ConfigurationService;
+  private configService: WebhookConfigRegistry;
 
   private constructor() {
-    this.configService = ConfigurationService.getInstance();
+    this.configService = WebhookConfigRegistry.getInstance();
   }
 
   public static getInstance(): WebhookService {

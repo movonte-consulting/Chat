@@ -1,43 +1,12 @@
 import { Request, Response } from 'express';
-import { CreateValidationRequestUseCase } from '../../../application/user/create-validation-request.use-case';
 import { GetUserValidationsUseCase } from '../../../application/user/get-user-validations.use-case';
 import { GenerateProtectedTokenUseCase } from '../../../application/user/generate-protected-token.use-case';
 
 export class UserServiceValidationController {
   constructor(
-    private readonly createValidationRequestUseCase: CreateValidationRequestUseCase,
     private readonly getUserValidationsUseCase: GetUserValidationsUseCase,
     private readonly generateProtectedTokenUseCase: GenerateProtectedTokenUseCase
   ) {}
-
-  public async createValidationRequest(req: Request, res: Response): Promise<void> {
-    try {
-      if (!req.user) {
-        res.status(401).json({ success: false, error: 'Usuario no autenticado' });
-        return;
-      }
-
-      const result = await this.createValidationRequestUseCase.execute(req.user.id, req.body);
-
-      if (result.kind === 'validation_error') {
-        res.status(400).json({ success: false, error: result.message });
-        return;
-      }
-      if (result.kind === 'user_not_found') {
-        res.status(404).json({ success: false, error: 'Usuario no encontrado' });
-        return;
-      }
-
-      res.status(201).json({
-        success: true,
-        message: 'Solicitud de validación creada exitosamente. Será revisada por un administrador.',
-        data: result.data
-      });
-    } catch (error) {
-      console.error('❌ Error creating validation request:', error);
-      res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Error interno del servidor' });
-    }
-  }
 
   public async getUserValidations(req: Request, res: Response): Promise<void> {
     try {

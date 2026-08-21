@@ -1,13 +1,13 @@
 import OpenAI from 'openai';
 import { ChatThread, ChatbotResponse, JiraWebhookPayload } from '../types';
-import { ConfigurationService } from './configuration_service';
+import { ServiceConfigRegistry } from './service_config_registry';
 import { DatabaseService } from './database_service';
 
 export class OpenAIService {
   private openai: OpenAI;
   private assistantId: string;
   private threads: Map<string, ChatThread> = new Map();
-  private configService: ConfigurationService;
+  private configService: ServiceConfigRegistry;
   private dbService: DatabaseService;
 
   constructor() {
@@ -15,7 +15,7 @@ export class OpenAIService {
       apiKey: process.env.OPENAI_API_KEY,
     });
     this.assistantId = process.env.OPENAI_ASSISTANT_ID || '';
-    this.configService = ConfigurationService.getInstance();
+    this.configService = ServiceConfigRegistry.getInstance();
     this.dbService = DatabaseService.getInstance();
   }
 

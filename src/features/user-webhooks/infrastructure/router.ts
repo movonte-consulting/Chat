@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authenticateToken } from '../../../middleware/auth';
 import { UserWebhooksController } from './controladores/user-webhooks.controller';
 
-/** Montado en /api/user/webhook (singular) — el "webhook simple" vía UserConfigurationService. */
+/** Montado en /api/user/webhook (singular) — el "webhook simple" vía UserWebhookConfigRegistry. */
 export function buildUserWebhookRouter(controller: UserWebhooksController): Router {
   const router = Router();
   router.get('/status', authenticateToken, controller.getWebhookStatus.bind(controller));

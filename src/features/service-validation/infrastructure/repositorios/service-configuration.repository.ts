@@ -1,10 +1,12 @@
 import { ServiceAccessCheckerPort } from '../../domain/interfaces/user/service-access-checker.port';
+import { ValidationRepositoryPort } from '../../domain/interfaces/user/validation-repository.port';
 import { PendingValidationsRepositoryPort } from '../../domain/interfaces/admin/pending-validations-repository.port';
 import { ValidationDecisionRepositoryPort } from '../../domain/interfaces/admin/validation-decision-repository.port';
 import { ServiceConfigurationRow, PendingValidationRow, ValidationDecisionRow } from '../../domain/modelos/service-configuration-row.model';
+import { ServiceValidationResponse } from '../../domain/modelos/validation-response.model';
 
 export class ServiceConfigurationRepository
-  implements ServiceAccessCheckerPort, PendingValidationsRepositoryPort, ValidationDecisionRepositoryPort {
+  implements ServiceAccessCheckerPort, ValidationRepositoryPort, PendingValidationsRepositoryPort, ValidationDecisionRepositoryPort {
   async getServiceForUser(userId: number, serviceId: string): Promise<ServiceConfigurationRow | null> {
     const { sequelize } = await import('../../../../config/database');
     const [configurations] = await sequelize.query(`
@@ -32,6 +34,33 @@ export class ServiceConfigurationRepository
       createdAt: config.created_at,
       updatedAt: config.updated_at
     };
+  }
+
+  async getUserValidations(userId: number): Promise<ServiceValidationResponse[]> {
+    const { sequelize } = await import('../../../../config/database');
+    const [rows] = await sequelize.query(`
+      SELECT * FROM unified_configurations
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+    `, {
+      replacements: [userId]
+    });
+
+    return (rows as any[]).map(row => {
+      const config = typeof row.configuration === 'string' ? JSON.parse(row.configuration) : row.configuration || {};
+
+      return {
+        id: row.id,
+        serviceName: row.service_name,
+        websiteUrl: config.websiteUrl,
+        requestedDomain: config.requestedDomain,
+        status: row.approval_status,
+        adminNotes: config.adminNotes,
+        validatedAt: config.adminApprovedAt || config.adminRejectedAt,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      } as ServiceValidationResponse;
+    });
   }
 
   async listPendingForAdmin(adminId: number): Promise<PendingValidationRow[]> {

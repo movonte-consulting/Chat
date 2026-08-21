@@ -1,10 +1,10 @@
-import { ConfigurationService } from '../services/configuration_service';
+import { ServiceConfigRegistry } from '../services/service_config_registry';
 
 async function debugConfigurationService() {
   try {
     console.log('🔍 === DEBUGGEANDO CONFIGURATION SERVICE ===\n');
 
-    const configService = ConfigurationService.getInstance();
+    const configService = ServiceConfigRegistry.getInstance();
     
     // Verificar configuración del servicio BDM
     console.log('1️⃣ Verificando configuración del servicio BDM...');

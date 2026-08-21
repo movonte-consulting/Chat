@@ -1,10 +1,8 @@
 import { Router, Request, Response } from 'express';
 
 import { ServiceValidationServiceAdapter } from './adaptadores/service-validation-service.adapter';
-import { UserLookupAdapter } from './adaptadores/user-lookup.adapter';
 import { ServiceConfigurationRepository } from './repositorios/service-configuration.repository';
 
-import { CreateValidationRequestUseCase } from '../application/user/create-validation-request.use-case';
 import { GetUserValidationsUseCase } from '../application/user/get-user-validations.use-case';
 import { GenerateProtectedTokenUseCase } from '../application/user/generate-protected-token.use-case';
 import { GetPendingValidationsUseCase } from '../application/admin/get-pending-validations.use-case';
@@ -19,15 +17,13 @@ import { buildUserServiceValidationRouter, buildAdminServiceValidationRouter } f
 
 // ── Infrastructure ───────────────────────────────────────────────────────────
 const serviceValidationService = new ServiceValidationServiceAdapter();
-const userLookup = new UserLookupAdapter();
 const serviceConfigurationRepository = new ServiceConfigurationRepository();
 
 // ── Application ───────────────────────────────────────────────────────────────
-const createValidationRequestUseCase = new CreateValidationRequestUseCase(serviceValidationService, userLookup);
-const getUserValidationsUseCase = new GetUserValidationsUseCase(serviceValidationService);
+const getUserValidationsUseCase = new GetUserValidationsUseCase(serviceConfigurationRepository);
 const generateProtectedTokenUseCase = new GenerateProtectedTokenUseCase(serviceConfigurationRepository, serviceValidationService);
 
-const getPendingValidationsUseCase = new GetPendingValidationsUseCase(serviceConfigurationRepository, serviceValidationService);
+const getPendingValidationsUseCase = new GetPendingValidationsUseCase(serviceConfigurationRepository, serviceConfigurationRepository);
 const approveValidationUseCase = new ApproveValidationUseCase(serviceConfigurationRepository, serviceValidationService);
 const rejectValidationUseCase = new RejectValidationUseCase(serviceConfigurationRepository);
 
@@ -35,7 +31,6 @@ const validateProtectedTokenUseCase = new ValidateProtectedTokenUseCase(serviceV
 
 // ── Presentation ─────────────────────────────────────────────────────────────
 const userController = new UserServiceValidationController(
-  createValidationRequestUseCase,
   getUserValidationsUseCase,
   generateProtectedTokenUseCase
 );

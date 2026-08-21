@@ -1,13 +1,13 @@
-import { UserConfigurationService } from '../../../../services/user_configuration_service';
+import { UserWebhookConfigRegistry } from '../../../../services/user_webhook_config_registry';
 import { UserWebhookConfigPort } from '../../domain/interfaces/user-webhook-config.port';
 import { UserWebhookConfiguration } from '../../domain/modelos/user-webhook-configuration.model';
 
 export class UserConfigurationServiceAdapter implements UserWebhookConfigPort {
   getWebhookConfiguration(userId: number): UserWebhookConfiguration | null {
-    return UserConfigurationService.getInstance(userId).getWebhookConfiguration();
+    return UserWebhookConfigRegistry.getInstance(userId).getWebhookConfiguration();
   }
 
   async setWebhookConfiguration(userId: number, config: UserWebhookConfiguration): Promise<void> {
-    await UserConfigurationService.getInstance(userId).setWebhookConfiguration(config);
+    await UserWebhookConfigRegistry.getInstance(userId).setWebhookConfiguration(config);
   }
 }

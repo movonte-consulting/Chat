@@ -1,10 +1,10 @@
-import { ConfigurationService } from '../services/configuration_service';
+import { ServiceConfigRegistry } from '../services/service_config_registry';
 import { DatabaseService } from '../services/database_service';
 
 async function debugConfiguration() {
   console.log('🔍 === DEBUGGING CONFIGURATION ===\n');
   
-  const configService = ConfigurationService.getInstance();
+  const configService = ServiceConfigRegistry.getInstance();
   const dbService = DatabaseService.getInstance();
   
   // Esperar a que las configuraciones se carguen completamente

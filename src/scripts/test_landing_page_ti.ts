@@ -1,5 +1,5 @@
 import { OpenAIService } from '../services/openAI_service';
-import { ConfigurationService } from '../services/configuration_service';
+import { ServiceConfigRegistry } from '../services/service_config_registry';
 
 async function testLandingPageTI() {
   try {
@@ -7,7 +7,7 @@ async function testLandingPageTI() {
 
     // Forzar recarga de configuraciones
     console.log('1️⃣ Forzando recarga de configuraciones...');
-    const configService = ConfigurationService.getInstance();
+    const configService = ServiceConfigRegistry.getInstance();
     const configServiceAny = configService as any;
     await configServiceAny.loadConfigurationsFromDatabase();
     

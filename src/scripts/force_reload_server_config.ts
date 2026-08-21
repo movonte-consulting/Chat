@@ -1,4 +1,4 @@
-import { ConfigurationService } from '../services/configuration_service';
+import { ServiceConfigRegistry } from '../services/service_config_registry';
 import { OpenAIService } from '../services/openAI_service';
 
 async function forceReloadServerConfig() {
@@ -7,7 +7,7 @@ async function forceReloadServerConfig() {
 
     // 1. Forzar recarga de ConfigurationService
     console.log('1️⃣ Forzando recarga de ConfigurationService...');
-    const configService = ConfigurationService.getInstance();
+    const configService = ServiceConfigRegistry.getInstance();
     const configServiceAny = configService as any;
     await configServiceAny.loadConfigurationsFromDatabase();
     

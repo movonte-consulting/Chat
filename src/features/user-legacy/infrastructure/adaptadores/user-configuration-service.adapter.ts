@@ -1,4 +1,6 @@
-import { UserConfigurationService } from '../../../../services/user_configuration_service';
+import { UserServiceConfigRegistry } from '../servicios/user-service-config-registry.service';
+import { UserWebhookConfigRegistry } from '../../../../services/user_webhook_config_registry';
+import * as userInstanceService from '../servicios/user-instance.service';
 import { UserInstancesRepositoryPort } from '../../domain/interfaces/user-instances-repository.port';
 import { LegacyServiceConfigurationsPort } from '../../domain/interfaces/legacy-service-configurations.port';
 import { LegacyWebhookConfigPort } from '../../domain/interfaces/legacy-webhook-config.port';
@@ -6,12 +8,11 @@ import { UserInstance, CreateInstanceInput, UpdateInstanceInput } from '../../do
 import { ServiceConfigurationSummary } from '../../domain/modelos/service-configuration-summary.model';
 import { UserWebhookConfiguration } from '../../domain/modelos/user-webhook-configuration.model';
 
-/** Envuelve UserConfigurationService.getInstance(userId) — singleton por usuario, en memoria + DB. */
+/** Envuelve UserServiceConfigRegistry/UserWebhookConfigRegistry (singletons por usuario, en memoria + DB) y user_instance_service (sin caché). */
 export class UserConfigurationServiceAdapter
   implements UserInstancesRepositoryPort, LegacyServiceConfigurationsPort, LegacyWebhookConfigPort {
   async list(userId: number): Promise<UserInstance[]> {
-    const service = UserConfigurationService.getInstance(userId);
-    const instances = await service.getUserInstances();
+    const instances = await userInstanceService.getUserInstances(userId);
     return instances.map((instance: any) => ({
       id: instance.id,
       instanceName: instance.instanceName,
@@ -24,8 +25,7 @@ export class UserConfigurationServiceAdapter
   }
 
   async create(userId: number, input: CreateInstanceInput): Promise<UserInstance> {
-    const service = UserConfigurationService.getInstance(userId);
-    const instance = await service.createInstance(input);
+    const instance = await userInstanceService.createInstance(userId, input);
     return {
       id: instance.id,
       instanceName: instance.instanceName,
@@ -38,18 +38,15 @@ export class UserConfigurationServiceAdapter
   }
 
   async update(userId: number, id: number, input: UpdateInstanceInput): Promise<void> {
-    const service = UserConfigurationService.getInstance(userId);
-    await service.updateInstance(id, input);
+    await userInstanceService.updateInstance(userId, id, input);
   }
 
   async delete(userId: number, id: number): Promise<void> {
-    const service = UserConfigurationService.getInstance(userId);
-    await service.deleteInstance(id);
+    await userInstanceService.deleteInstance(userId, id);
   }
 
   listAll(userId: number): ServiceConfigurationSummary[] {
-    const service = UserConfigurationService.getInstance(userId);
-    return service.getAllServiceConfigurations();
+    return UserServiceConfigRegistry.getInstance(userId).getAllServiceConfigurations();
   }
 
   async setConfiguration(
@@ -61,17 +58,14 @@ export class UserConfigurationServiceAdapter
     isActive: boolean | undefined,
     configuration: any
   ): Promise<void> {
-    const service = UserConfigurationService.getInstance(userId);
-    await service.setServiceConfiguration(serviceId, serviceName, assistantId, assistantName, isActive, configuration);
+    await UserServiceConfigRegistry.getInstance(userId).setServiceConfiguration(serviceId, serviceName, assistantId, assistantName, isActive, configuration);
   }
 
   get(userId: number): UserWebhookConfiguration | null {
-    const service = UserConfigurationService.getInstance(userId);
-    return service.getWebhookConfiguration();
+    return UserWebhookConfigRegistry.getInstance(userId).getWebhookConfiguration();
   }
 
   async set(userId: number, config: UserWebhookConfiguration): Promise<void> {
-    const service = UserConfigurationService.getInstance(userId);
-    await service.setWebhookConfiguration(config);
+    await UserWebhookConfigRegistry.getInstance(userId).setWebhookConfiguration(config);
   }
 }

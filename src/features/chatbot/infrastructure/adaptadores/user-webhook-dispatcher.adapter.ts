@@ -1,4 +1,4 @@
-import { UserWebhookService } from '../../../../services/user_webhook_service';
+import { UserWebhookService } from '../servicios/user-webhook.service';
 import { UserWebhookDispatcherPort, WebhookDispatchPayload } from '../../domain/interfaces/user-webhook-dispatcher.port';
 import { UserWebhookRecord } from '../../domain/interfaces/user-webhook-lookup.port';
 

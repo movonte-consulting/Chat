@@ -1,6 +1,6 @@
 import { WebhookRecord, UserWebhookListItem, CreateWebhookInput, UpdateWebhookInput } from '../modelos/webhook.model';
 
-/** CRUD completo sobre user_webhooks (distinto del "webhook simple" de UserConfigurationService). */
+/** CRUD completo sobre user_webhooks (distinto del "webhook simple" de UserWebhookConfigRegistry). */
 export interface UserWebhookRepositoryPort {
   listForUser(userId: number): Promise<UserWebhookListItem[]>;
   create(userId: number, input: CreateWebhookInput): Promise<WebhookRecord>;

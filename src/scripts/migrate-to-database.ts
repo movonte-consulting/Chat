@@ -1,6 +1,6 @@
 import { testConnection, syncDatabase } from '../config/database';
 import { DatabaseService } from '../services/database_service';
-import { ConfigurationService } from '../services/configuration_service';
+import { ServiceConfigRegistry } from '../services/service_config_registry';
 
 async function migrateToDatabase() {
   console.log('🔄 Iniciando migración a base de datos...');
@@ -19,7 +19,7 @@ async function migrateToDatabase() {
     await syncDatabase();
     
     const dbService = DatabaseService.getInstance();
-    const configService = ConfigurationService.getInstance();
+    const configService = ServiceConfigRegistry.getInstance();
     
     // Migrar configuraciones de servicios
     console.log('📋 Migrando configuraciones de servicios...');

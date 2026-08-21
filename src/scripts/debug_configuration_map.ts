@@ -1,10 +1,10 @@
-import { ConfigurationService } from '../services/configuration_service';
+import { ServiceConfigRegistry } from '../services/service_config_registry';
 
 async function debugConfigurationMap() {
   try {
     console.log('🔍 === DEBUGGEANDO MAP DE CONFIGURACIONES ===\n');
 
-    const configService = ConfigurationService.getInstance();
+    const configService = ServiceConfigRegistry.getInstance();
     
     // Acceder al Map de configuraciones (usando any para acceder a propiedades privadas)
     const configServiceAny = configService as any;
